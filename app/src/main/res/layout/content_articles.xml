@@ -13,21 +13,34 @@
     tools:context="com.coremantra.tutorial.thenewyorktimes.activities.ArticlesActivity"
     tools:showIn="@layout/activity_articles">
 
+
+    <EditText
+        android:id="@+id/etSearch"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:inputType="textPersonName"
+        android:hint="@string/search"
+        android:ems="10"
+        android:layout_alignParentTop="true"
+        android:layout_alignParentStart="true" />
+
+    <Button
+        android:id="@+id/btLoadArticles"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/show_articles"
+        android:gravity="center"
+        android:layout_toRightOf="@id/etSearch"
+        android:onClick="onClickSearch"/>
+
+
     <TextView
         android:id="@+id/tvDetails"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:layout_below="@id/etSearch"
         android:maxLines="25"
         android:ellipsize="end"
         android:padding="10dp"
         tools:text="Hello World!" />
-
-    <Button
-        android:id="@+id/btLoadArticles"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="@string/show_articles"
-        android:gravity="center"
-        android:layout_alignParentBottom="true"
-        android:onClick="onClickLoadArticles"/>
 </RelativeLayout>

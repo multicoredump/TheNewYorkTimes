@@ -8,6 +8,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.TextView;
 
 import com.coremantra.tutorial.thenewyorktimes.R;
@@ -35,6 +36,9 @@ public class ArticlesActivity extends AppCompatActivity {
 
     @BindView(R.id.tvDetails)
     TextView tvDetails;
+
+    @BindView(R.id.etSearch)
+    EditText etSearch;
 
     Gson gson;
     Retrofit retrofit;
@@ -82,10 +86,16 @@ public class ArticlesActivity extends AppCompatActivity {
         return super.onOptionsItemSelected(item);
     }
 
-    public void onClickLoadArticles(View view) {
+    public void onClickSearch(View view) {
         tvDetails.setText("Loading articles ...");
 
-        Call<ResponseWrapper> responseWrapperCall = nyTimesAPI.getArticles(nyTimesAPI.API_KEY, 0);
+        String searchQuery = etSearch.getText().toString();
+
+        Call<ResponseWrapper> responseWrapperCall = nyTimesAPI.getArticles(nyTimesAPI.API_KEY, 0, null,
+                searchQuery.isEmpty()? null : searchQuery, null);
+
+                // getArticles(nyTimesAPI.API_KEY, 0,"news_desk:(\"Education\"%20\"Health\")");
+        Log.d(TAG, responseWrapperCall.request().toString());
         responseWrapperCall.enqueue(responseWrapperCallback);
     }
 
@@ -95,7 +105,6 @@ public class ArticlesActivity extends AppCompatActivity {
             if (response.isSuccessful()) {
                 Log.d(TAG, "Articles response is successful");
                 List<Doc> articles = response.body().getResponse().getDocs();
-
 
                     StringBuilder builder = new StringBuilder();
 

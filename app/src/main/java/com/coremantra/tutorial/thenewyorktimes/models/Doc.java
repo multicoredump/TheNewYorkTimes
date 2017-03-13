@@ -1,9 +1,10 @@
 
 package com.coremantra.tutorial.thenewyorktimes.models;
 
-import java.util.List;
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
+
+import java.util.List;
 
 public class Doc {
 
@@ -52,9 +53,9 @@ public class Doc {
     @SerializedName("subsection_name")
     @Expose
     private String subsectionName;
-    @SerializedName("byline")
-    @Expose
-    private Byline byline;
+//    @SerializedName("byline")
+//    @Expose (serialize = false)
+//    private Byline byline;
     @SerializedName("type_of_material")
     @Expose
     private String typeOfMaterial;
@@ -188,13 +189,13 @@ public class Doc {
         this.subsectionName = subsectionName;
     }
 
-    public Byline getByline() {
-        return byline;
-    }
+//    public Byline getByline() {
+//        return byline;
+//    }
 
-    public void setByline(Byline byline) {
-        this.byline = byline;
-    }
+//    public void setByline(Byline byline) {
+//        this.byline = byline;
+//    }
 
     public String getTypeOfMaterial() {
         return typeOfMaterial;

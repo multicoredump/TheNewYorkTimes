@@ -18,5 +18,9 @@ public interface NYTimesAPI {
 
     @GET("/svc/search/v2/articlesearch.json")
     Call<ResponseWrapper> getArticles(@Query("api_key") String key,
-                                      @Query("page") int page);
+                                      @Query("page") Integer page,
+                                      @Query("sort") String order,
+                                      @Query("q") String search,
+                                      @Query("fq") String filters
+                                      );
 }
