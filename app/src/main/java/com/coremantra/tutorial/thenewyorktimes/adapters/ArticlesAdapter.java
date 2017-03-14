@@ -36,8 +36,9 @@ public class ArticlesAdapter extends RecyclerView.Adapter<ArticlesAdapter.Articl
         this.articles = articles;
     }
 
-    public void updateDate(List<Doc> articles) {
-        this.articles = articles;
+    public void updateData(List<Doc> newArticles) {
+        articles.clear();
+        articles.addAll(newArticles);
         notifyDataSetChanged();
     }
 
