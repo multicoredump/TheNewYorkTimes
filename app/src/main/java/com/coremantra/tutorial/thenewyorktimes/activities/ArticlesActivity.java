@@ -2,6 +2,8 @@ package com.coremantra.tutorial.thenewyorktimes.activities;
 
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.RecyclerView;
+import android.support.v7.widget.StaggeredGridLayoutManager;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.Menu;
@@ -9,15 +11,16 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
-import android.widget.TextView;
 
 import com.coremantra.tutorial.thenewyorktimes.R;
+import com.coremantra.tutorial.thenewyorktimes.adapters.ArticlesAdapter;
 import com.coremantra.tutorial.thenewyorktimes.api.NYTimesAPI;
 import com.coremantra.tutorial.thenewyorktimes.models.Doc;
 import com.coremantra.tutorial.thenewyorktimes.models.ResponseWrapper;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import butterknife.BindView;
@@ -34,15 +37,21 @@ public class ArticlesActivity extends AppCompatActivity {
     @BindView(R.id.btLoadArticles)
     Button btLoadArticles;
 
-    @BindView(R.id.tvDetails)
-    TextView tvDetails;
+//    @BindView(R.id.tvDetails)
+//    TextView tvDetails;
 
     @BindView(R.id.etSearch)
     EditText etSearch;
 
+    @BindView(R.id.rvArticles)
+    RecyclerView rvArticles;
+
     Gson gson;
     Retrofit retrofit;
     NYTimesAPI nyTimesAPI;
+
+    List<Doc> articles = new ArrayList<>();
+    ArticlesAdapter articlesAdapter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -62,6 +71,24 @@ public class ArticlesActivity extends AppCompatActivity {
                 .build();
 
         nyTimesAPI = retrofit.create(NYTimesAPI.class);
+
+        fetchArticles(null);
+
+        // UI Code
+        articlesAdapter = new ArticlesAdapter(articles);
+        rvArticles.setAdapter(articlesAdapter);
+
+        StaggeredGridLayoutManager layoutManager = new StaggeredGridLayoutManager(2, 1);
+        rvArticles.setLayoutManager(layoutManager);
+
+    }
+
+    private void fetchArticles(String query) {
+        Call<ResponseWrapper> responseWrapperCall = nyTimesAPI.getArticles(nyTimesAPI.API_KEY, 1, null,
+                query, null); // getArticles(nyTimesAPI.API_KEY, 0,"news_desk:(\"Education\"%20\"Health\")");
+        Log.d(TAG, responseWrapperCall.request().url().toString());
+
+        responseWrapperCall.enqueue(responseWrapperCallback);
     }
 
     @Override
@@ -87,16 +114,8 @@ public class ArticlesActivity extends AppCompatActivity {
     }
 
     public void onClickSearch(View view) {
-        tvDetails.setText("Loading articles ...");
-
-        String searchQuery = etSearch.getText().toString();
-
-        Call<ResponseWrapper> responseWrapperCall = nyTimesAPI.getArticles(nyTimesAPI.API_KEY, 0, null,
-                searchQuery.isEmpty()? null : searchQuery, null);
-
-                // getArticles(nyTimesAPI.API_KEY, 0,"news_desk:(\"Education\"%20\"Health\")");
-        Log.d(TAG, responseWrapperCall.request().toString());
-        responseWrapperCall.enqueue(responseWrapperCallback);
+//        tvDetails.setText("Loading articles ...");
+        fetchArticles(etSearch.getText().toString());
     }
 
     Callback<ResponseWrapper> responseWrapperCallback = new Callback<ResponseWrapper>() {
@@ -106,14 +125,15 @@ public class ArticlesActivity extends AppCompatActivity {
                 Log.d(TAG, "Articles response is successful");
                 List<Doc> articles = response.body().getResponse().getDocs();
 
-                    StringBuilder builder = new StringBuilder();
+                StringBuilder builder = new StringBuilder();
 
-                    for (Doc article : articles) {
-                        Log.i(TAG, article.getHeadline().getMain());
-                        builder.append(article.getHeadline().getMain() + "\n\n");
-                    }
+                for (Doc article : articles) {
+                    Log.i(TAG, article.getHeadline().getMain());
+                    builder.append(article.getHeadline().getMain() + "\n\n");
+                }
 
-                    tvDetails.setText(builder.toString());
+                articlesAdapter.updateDate(articles);
+//                    tvDetails.setText(builder.toString());
 
             } else {
                 Log.e(TAG, "Something went wrong");
