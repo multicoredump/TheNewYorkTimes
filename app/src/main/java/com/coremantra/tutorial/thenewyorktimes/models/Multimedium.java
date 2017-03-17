@@ -4,6 +4,9 @@ package com.coremantra.tutorial.thenewyorktimes.models;
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
 
+import org.parceler.Parcel;
+
+@Parcel
 public class Multimedium {
 
     @SerializedName("width")
@@ -12,18 +15,13 @@ public class Multimedium {
     @SerializedName("url")
     @Expose
     private String url;
-    @SerializedName("rank")
-    @Expose
-    private Integer rank;
     @SerializedName("height")
     @Expose
     private Integer height;
     @SerializedName("subtype")
     @Expose
     private String subtype;
-    @SerializedName("legacy")
-    @Expose
-    private Legacy legacy;
+
     @SerializedName("type")
     @Expose
     private String type;
@@ -44,13 +42,6 @@ public class Multimedium {
         this.url = url;
     }
 
-    public Integer getRank() {
-        return rank;
-    }
-
-    public void setRank(Integer rank) {
-        this.rank = rank;
-    }
 
     public Integer getHeight() {
         return height;
@@ -68,13 +59,6 @@ public class Multimedium {
         this.subtype = subtype;
     }
 
-    public Legacy getLegacy() {
-        return legacy;
-    }
-
-    public void setLegacy(Legacy legacy) {
-        this.legacy = legacy;
-    }
 
     public String getType() {
         return type;

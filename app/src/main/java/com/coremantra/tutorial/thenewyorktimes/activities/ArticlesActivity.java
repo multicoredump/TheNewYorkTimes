@@ -1,6 +1,8 @@
 package com.coremantra.tutorial.thenewyorktimes.activities;
 
+import android.content.Intent;
 import android.os.Bundle;
+import android.support.design.widget.Snackbar;
 import android.support.v4.view.MenuItemCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.RecyclerView;
@@ -11,12 +13,16 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
+import android.view.View;
+import android.widget.EditText;
 
 import com.coremantra.tutorial.thenewyorktimes.R;
 import com.coremantra.tutorial.thenewyorktimes.adapters.ArticlesAdapter;
 import com.coremantra.tutorial.thenewyorktimes.api.NYTimesAPI;
 import com.coremantra.tutorial.thenewyorktimes.models.Doc;
 import com.coremantra.tutorial.thenewyorktimes.models.ResponseWrapper;
+import com.coremantra.tutorial.thenewyorktimes.utils.EndlessRecyclerViewScrollListener;
+import com.coremantra.tutorial.thenewyorktimes.utils.ItemClickSupport;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
@@ -40,6 +46,8 @@ public class ArticlesActivity extends AppCompatActivity {
     @BindView(R.id.rvArticles)
     RecyclerView rvArticles;
 
+    @BindView(R.id.toolbar) Toolbar toolbar;
+
     Gson gson;
     Retrofit retrofit;
     NYTimesAPI nyTimesAPI;
@@ -47,12 +55,35 @@ public class ArticlesActivity extends AppCompatActivity {
     List<Doc> articles = new ArrayList<>();
     ArticlesAdapter articlesAdapter;
 
+    EndlessRecyclerViewScrollListener scrollListener;
+
+    // Query params
+    String sort = null;
+    String searchQuery = null;
+    String filters = null;
+
+    ItemClickSupport.OnItemClickListener itemClickListener = new ItemClickSupport.OnItemClickListener() {
+        @Override
+        public void onItemClicked(RecyclerView recyclerView, int position, View v) {
+
+            Doc article = articlesAdapter.getItem(position);
+            if (article != null) {
+                Intent displayArticleIntent = new Intent(getApplicationContext(), DisplayArticleActivity.class);
+                displayArticleIntent.putExtra("url", article.getWebUrl());
+                startActivity(displayArticleIntent);
+            } else {
+                Snackbar.make(v, "position: " + position + " received NULL object", Snackbar.LENGTH_LONG)
+                        .setAction("Action", null).show();
+            }
+        }
+    };
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_articles);
         ButterKnife.bind(this);
-        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
+
         setSupportActionBar(toolbar);
 
         gson = new GsonBuilder()
@@ -75,15 +106,95 @@ public class ArticlesActivity extends AppCompatActivity {
         StaggeredGridLayoutManager layoutManager = new StaggeredGridLayoutManager(2, 1);
         rvArticles.setLayoutManager(layoutManager);
 
+        // Retain an instance so that you can call `resetState()` for fresh searches
+        scrollListener = new EndlessRecyclerViewScrollListener(layoutManager) {
+            @Override
+            public void onLoadMore(int page, int totalItemsCount, RecyclerView view) {
+                Log.d(TAG, " ---------------- Inside onLoadMore: " + page);
+                loadNextDataFromApi(page);
+            }
+        };
+        // Adds the scroll listener to RecyclerView
+        rvArticles.addOnScrollListener(scrollListener);
+
+        ItemClickSupport.addTo(rvArticles).setOnItemClickListener(itemClickListener);
+    }
+
+
+    // Append the next page of data into the adapter
+    // This method probably sends out a network request and appends new data items to your adapter.
+    // Send an API request to retrieve appropriate paginated data
+    public void loadNextDataFromApi(int page) {
+        Call<ResponseWrapper> responseWrapperCall = nyTimesAPI.getArticles(nyTimesAPI.API_KEY, page, sort,
+                searchQuery, filters); // getArticles(nyTimesAPI.API_KEY, 0,"news_desk:(\"Education\"%20\"Health\")");
+        Log.d(TAG, responseWrapperCall.request().url().toString());
+        responseWrapperCall.enqueue(nextDataResponseCallback);
     }
 
     private void fetchArticles(String query) {
-        Call<ResponseWrapper> responseWrapperCall = nyTimesAPI.getArticles(nyTimesAPI.API_KEY, 1, null,
-                query, null); // getArticles(nyTimesAPI.API_KEY, 0,"news_desk:(\"Education\"%20\"Health\")");
+        searchQuery = query;
+        Call<ResponseWrapper> responseWrapperCall = nyTimesAPI.getArticles(nyTimesAPI.API_KEY, 0, sort,
+                searchQuery, filters); // getArticles(nyTimesAPI.API_KEY, 0,"news_desk:(\"Education\"%20\"Health\")");
         Log.d(TAG, responseWrapperCall.request().url().toString());
 
-        responseWrapperCall.enqueue(responseWrapperCallback);
+        responseWrapperCall.enqueue(newQueryResponseCallback);
     }
+
+    Callback<ResponseWrapper> newQueryResponseCallback = new Callback<ResponseWrapper>() {
+        @Override
+        public void onResponse(Call<ResponseWrapper> call, Response<ResponseWrapper> response) {
+            if (response.isSuccessful()) {
+                Log.d(TAG, "newQueryResponseCallback: Articles response is successful");
+                List<Doc> articles = response.body().getResponse().getDocs();
+
+                StringBuilder builder = new StringBuilder();
+                for (Doc article : articles) {
+                    Log.i(TAG, article.getHeadline().getMain());
+                    builder.append(article.getHeadline().getMain() + "\n\n");
+                }
+
+                // Since this is a new search query, we replace the data in adapter.
+                articlesAdapter.replaceData(articles);
+//                    tvDetails.setText(builder.toString());
+
+            } else {
+                Log.e(TAG, "newQueryResponseCallback: Something went wrong " + response.code());
+                Log.e(TAG, response.errorBody().toString());
+            }
+        }
+
+        @Override
+        public void onFailure(Call<ResponseWrapper> call, Throwable t) {
+            Log.e(TAG, "newQueryResponseCallback: Articles: Something went terrible", t);
+        }
+    };
+
+    Callback<ResponseWrapper> nextDataResponseCallback = new Callback<ResponseWrapper>() {
+        @Override
+        public void onResponse(Call<ResponseWrapper> call, Response<ResponseWrapper> response) {
+            if (response.isSuccessful()) {
+                Log.d(TAG, "nextDataResponseCallback: Articles response is successful");
+                List<Doc> articles = response.body().getResponse().getDocs();
+
+                StringBuilder builder = new StringBuilder();
+                for (Doc article : articles) {
+                    Log.i(TAG, article.getHeadline().getMain());
+                    builder.append(article.getHeadline().getMain() + "\n\n");
+                }
+
+                // Since this is a incremental data, we append it
+                articlesAdapter.appendData(articles);
+
+            } else {
+                Log.e(TAG, "nextDataResponseCallback: Something went wrong " + response.code());
+            }
+        }
+
+        @Override
+        public void onFailure(Call<ResponseWrapper> call, Throwable t) {
+            Log.e(TAG, "nextDataResponseCallback: Articles: Something went terrible", t);
+        }
+    };
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -92,11 +203,16 @@ public class ArticlesActivity extends AppCompatActivity {
         MenuItem searchItem = menu.findItem(R.id.action_search);
         final SearchView searchView = (SearchView) MenuItemCompat.getActionView(searchItem);
 
+        int searchEditId = android.support.v7.appcompat.R.id.search_src_text;
+        EditText et = (EditText) searchView.findViewById(searchEditId);
+        et.setHint(getResources().getString(R.string.search_hint));
+
         searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
             @Override
             public boolean onQueryTextSubmit(String query) {
-                // perform query here
+                scrollListener.resetState();
                 fetchArticles(query);
+
                 Log.d(TAG, "=========== Inside onQueryTextSubmit");
                 searchView.clearFocus();
 
@@ -108,6 +224,25 @@ public class ArticlesActivity extends AppCompatActivity {
                 return false;
             }
         });
+
+
+        MenuItemCompat.setOnActionExpandListener(menu.findItem(R.id.action_search), new MenuItemCompat.OnActionExpandListener() {
+            @Override
+            public boolean onMenuItemActionExpand(MenuItem item) {
+                return true;
+            }
+
+            @Override
+            public boolean onMenuItemActionCollapse(MenuItem item) {
+                Log.d(TAG, "------- BACK Pressed onMenuItemActionCollapse-----");
+                //DO SOMETHING WHEN THE SEARCHVIEW IS CLOSING
+                scrollListener.resetState();
+                fetchArticles(null);
+
+                return true;
+            }
+        });
+
         return super.onCreateOptionsMenu(menu);
 
     }
@@ -125,36 +260,9 @@ public class ArticlesActivity extends AppCompatActivity {
                 item.expandActionView();
                 searchView.requestFocus();
                 return true;
+
         }
 
         return super.onOptionsItemSelected(item);
     }
-
-    Callback<ResponseWrapper> responseWrapperCallback = new Callback<ResponseWrapper>() {
-        @Override
-        public void onResponse(Call<ResponseWrapper> call, Response<ResponseWrapper> response) {
-            if (response.isSuccessful()) {
-                Log.d(TAG, "Articles response is successful");
-                List<Doc> articles = response.body().getResponse().getDocs();
-
-                StringBuilder builder = new StringBuilder();
-
-                for (Doc article : articles) {
-                    Log.i(TAG, article.getHeadline().getMain());
-                    builder.append(article.getHeadline().getMain() + "\n\n");
-                }
-
-                articlesAdapter.updateData(articles);
-//                    tvDetails.setText(builder.toString());
-
-            } else {
-                Log.e(TAG, "Something went wrong");
-            }
-        }
-
-        @Override
-        public void onFailure(Call<ResponseWrapper> call, Throwable t) {
-            Log.e(TAG, "Articles: Something went terrible", t);
-        }
-    };
 }

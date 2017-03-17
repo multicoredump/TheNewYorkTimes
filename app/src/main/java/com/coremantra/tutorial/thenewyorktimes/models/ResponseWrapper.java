@@ -12,9 +12,7 @@ public class ResponseWrapper {
     @SerializedName("status")
     @Expose
     private String status;
-    @SerializedName("copyright")
-    @Expose
-    private String copyright;
+
 
     public Response getResponse() {
         return response;
@@ -32,12 +30,5 @@ public class ResponseWrapper {
         this.status = status;
     }
 
-    public String getCopyright() {
-        return copyright;
-    }
-
-    public void setCopyright(String copyright) {
-        this.copyright = copyright;
-    }
 
 }

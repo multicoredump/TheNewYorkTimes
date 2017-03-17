@@ -36,10 +36,20 @@ public class ArticlesAdapter extends RecyclerView.Adapter<ArticlesAdapter.Articl
         this.articles = articles;
     }
 
-    public void updateData(List<Doc> newArticles) {
+    public void replaceData(List<Doc> newArticles) {
         articles.clear();
         articles.addAll(newArticles);
         notifyDataSetChanged();
+    }
+
+    public void appendData(List<Doc> moreArticles) {
+        int start = articles.size();
+        articles.addAll(moreArticles);
+        notifyItemRangeInserted(start, moreArticles.size());
+    }
+
+    public Doc getItem(int position) {
+        return articles.get(position);
     }
 
     @Override
@@ -50,7 +60,7 @@ public class ArticlesAdapter extends RecyclerView.Adapter<ArticlesAdapter.Articl
 
     @Override
     public void onBindViewHolder(ArticleViewHolder holder, int position) {
-        holder.tvTitle.setText(articles.get(position).getSnippet());
+        holder.tvTitle.setText(articles.get(position).getHeadline().getMain());
     }
 
     @Override

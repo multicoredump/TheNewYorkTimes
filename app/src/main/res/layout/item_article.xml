@@ -21,11 +21,10 @@
             android:layout_height="wrap_content"
             android:textSize="13sp"
             tools:text="hello_world"
-            android:textColor="#ffffff"
             android:paddingBottom="8dp"
             android:paddingTop="8dp"
             android:gravity="center_horizontal"
-            android:background="#1976D2"/>
+            android:background="#F9F8F8"/>
     </RelativeLayout>
 
     </android.support.v7.widget.CardView>
