@@ -1,0 +1,106 @@
+
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    tools:context="com.coremantra.tutorial.thenewyorktimes.fragments.SearchFilterFragment"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent" >
+
+
+<ScrollView
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content">
+
+    <LinearLayout
+        android:orientation="vertical"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_margin="46dp"
+        android:padding="5dp"
+        android:gravity="center">
+
+        <TextView
+            android:id="@+id/tvBeginDate"
+            style="@style/HighlightText"
+            android:text="@string/begin_date" />
+
+        <EditText
+            android:id="@+id/etBeginDate"
+            android:layout_width="150dp"
+            android:layout_height="wrap_content"
+            android:padding="10dp"
+            android:hint="@string/begin_date_hint" />
+
+
+        <TextView
+            android:id="@+id/tvNewsDesk"
+            style="@style/HighlightText"
+            android:text="@string/news_desk" />
+
+        <CheckBox
+            android:id="@+id/cbFood"
+            android:layout_width="120dp"
+            android:layout_height="wrap_content"
+            android:text="@string/food" />
+
+        <CheckBox
+            android:id="@+id/cbFashion"
+            android:layout_width="120dp"
+            android:layout_height="wrap_content"
+            android:text="@string/fashion" />
+
+        <CheckBox
+            android:id="@+id/cbDining"
+            android:layout_width="120dp"
+            android:layout_height="wrap_content"
+            android:text="@string/dining" />
+
+        <CheckBox
+            android:id="@+id/cbTravel"
+            android:layout_width="120dp"
+            android:layout_height="wrap_content"
+            android:text="@string/travel" />
+
+        <CheckBox
+            android:id="@+id/cbTech"
+            android:layout_width="120dp"
+            android:layout_height="wrap_content"
+            android:text="@string/tech" />
+
+        <TextView
+            android:id="@+id/tvSort"
+            style="@style/HighlightText"
+            android:text="@string/sort_order" />
+
+        <RadioGroup
+            android:id="@+id/rgSortOrder"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal" >
+
+            <RadioButton
+                android:id="@+id/radioNewest"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/newest"
+                tools:checked="true"/>
+
+            <RadioButton
+                android:id="@+id/radioOldest"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/oldest" />
+        </RadioGroup>
+
+        <Button
+            android:id="@+id/btSave"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/activity_vertical_margin"
+            android:background="@color/highlight"
+            android:textColor="@android:color/white"
+            android:text="@string/save"/>
+
+    </LinearLayout>
+    </ScrollView>
+
+</FrameLayout>

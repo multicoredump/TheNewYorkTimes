@@ -3,6 +3,7 @@ package com.coremantra.tutorial.thenewyorktimes.activities;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.design.widget.Snackbar;
+import android.support.v4.app.FragmentManager;
 import android.support.v4.view.MenuItemCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.RecyclerView;
@@ -19,8 +20,10 @@ import android.widget.EditText;
 import com.coremantra.tutorial.thenewyorktimes.R;
 import com.coremantra.tutorial.thenewyorktimes.adapters.ArticlesAdapter;
 import com.coremantra.tutorial.thenewyorktimes.api.NYTimesAPI;
+import com.coremantra.tutorial.thenewyorktimes.fragments.SearchFilterFragment;
 import com.coremantra.tutorial.thenewyorktimes.models.Doc;
 import com.coremantra.tutorial.thenewyorktimes.models.ResponseWrapper;
+import com.coremantra.tutorial.thenewyorktimes.models.SearchFilters;
 import com.coremantra.tutorial.thenewyorktimes.utils.EndlessRecyclerViewScrollListener;
 import com.coremantra.tutorial.thenewyorktimes.utils.ItemClickSupport;
 import com.google.gson.Gson;
@@ -37,7 +40,7 @@ import retrofit2.Response;
 import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
 
-public class ArticlesActivity extends AppCompatActivity {
+public class ArticlesActivity extends AppCompatActivity implements SearchFilterFragment.OnFragmentInteractionListener {
 
     private static final String TAG = ArticlesActivity.class.getName();
 //    @BindView(R.id.tvDetails)
@@ -57,10 +60,7 @@ public class ArticlesActivity extends AppCompatActivity {
 
     EndlessRecyclerViewScrollListener scrollListener;
 
-    // Query params
-    String sort = null;
-    String searchQuery = null;
-    String filters = null;
+    SearchFilters searchFilters;
 
     ItemClickSupport.OnItemClickListener itemClickListener = new ItemClickSupport.OnItemClickListener() {
         @Override
@@ -97,7 +97,8 @@ public class ArticlesActivity extends AppCompatActivity {
 
         nyTimesAPI = retrofit.create(NYTimesAPI.class);
 
-        fetchArticles(null);
+        searchFilters = new SearchFilters();
+        searchArticles(searchFilters);
 
         // UI Code
         articlesAdapter = new ArticlesAdapter(articles);
@@ -111,7 +112,7 @@ public class ArticlesActivity extends AppCompatActivity {
             @Override
             public void onLoadMore(int page, int totalItemsCount, RecyclerView view) {
                 Log.d(TAG, " ---------------- Inside onLoadMore: " + page);
-                loadNextDataFromApi(page);
+                loadNextDataFromApi(page, searchFilters);
             }
         };
         // Adds the scroll listener to RecyclerView
@@ -124,17 +125,19 @@ public class ArticlesActivity extends AppCompatActivity {
     // Append the next page of data into the adapter
     // This method probably sends out a network request and appends new data items to your adapter.
     // Send an API request to retrieve appropriate paginated data
-    public void loadNextDataFromApi(int page) {
-        Call<ResponseWrapper> responseWrapperCall = nyTimesAPI.getArticles(nyTimesAPI.API_KEY, page, sort,
-                searchQuery, filters); // getArticles(nyTimesAPI.API_KEY, 0,"news_desk:(\"Education\"%20\"Health\")");
+    public void loadNextDataFromApi(int page, SearchFilters filters) {
+
+        Log.d(TAG, filters.toString());
+
+        Call<ResponseWrapper> responseWrapperCall = nyTimesAPI.getArticles(nyTimesAPI.API_KEY, page, filters.getSortOrder(),
+                filters.getQuery(), filters.getNewsDesk()); // getArticles(nyTimesAPI.API_KEY, 0,"news_desk:(\"Education\"%20\"Health\")");
         Log.d(TAG, responseWrapperCall.request().url().toString());
         responseWrapperCall.enqueue(nextDataResponseCallback);
     }
 
-    private void fetchArticles(String query) {
-        searchQuery = query;
-        Call<ResponseWrapper> responseWrapperCall = nyTimesAPI.getArticles(nyTimesAPI.API_KEY, 0, sort,
-                searchQuery, filters); // getArticles(nyTimesAPI.API_KEY, 0,"news_desk:(\"Education\"%20\"Health\")");
+    private void searchArticles(SearchFilters filters) {
+        Call<ResponseWrapper> responseWrapperCall = nyTimesAPI.getArticles(nyTimesAPI.API_KEY, 0, filters.getSortOrder(),
+                filters.getQuery(), filters.getNewsDesk()); // getArticles(nyTimesAPI.API_KEY, 0,"news_desk:(\"Education\"%20\"Health\")");
         Log.d(TAG, responseWrapperCall.request().url().toString());
 
         responseWrapperCall.enqueue(newQueryResponseCallback);
@@ -145,17 +148,11 @@ public class ArticlesActivity extends AppCompatActivity {
         public void onResponse(Call<ResponseWrapper> call, Response<ResponseWrapper> response) {
             if (response.isSuccessful()) {
                 Log.d(TAG, "newQueryResponseCallback: Articles response is successful");
-                List<Doc> articles = response.body().getResponse().getDocs();
-
-                StringBuilder builder = new StringBuilder();
-                for (Doc article : articles) {
-                    Log.i(TAG, article.getHeadline().getMain());
-                    builder.append(article.getHeadline().getMain() + "\n\n");
-                }
 
                 // Since this is a new search query, we replace the data in adapter.
+                articles.clear();
+                articles = getArticles(response.body().getResponse());
                 articlesAdapter.replaceData(articles);
-//                    tvDetails.setText(builder.toString());
 
             } else {
                 Log.e(TAG, "newQueryResponseCallback: Something went wrong " + response.code());
@@ -174,15 +171,9 @@ public class ArticlesActivity extends AppCompatActivity {
         public void onResponse(Call<ResponseWrapper> call, Response<ResponseWrapper> response) {
             if (response.isSuccessful()) {
                 Log.d(TAG, "nextDataResponseCallback: Articles response is successful");
-                List<Doc> articles = response.body().getResponse().getDocs();
-
-                StringBuilder builder = new StringBuilder();
-                for (Doc article : articles) {
-                    Log.i(TAG, article.getHeadline().getMain());
-                    builder.append(article.getHeadline().getMain() + "\n\n");
-                }
 
                 // Since this is a incremental data, we append it
+                articles.addAll(getArticles(response.body().getResponse()));
                 articlesAdapter.appendData(articles);
 
             } else {
@@ -195,6 +186,19 @@ public class ArticlesActivity extends AppCompatActivity {
             Log.e(TAG, "nextDataResponseCallback: Articles: Something went terrible", t);
         }
     };
+
+
+    public List<Doc> getArticles(com.coremantra.tutorial.thenewyorktimes.models.Response response) {
+        List<Doc> articles = Doc.filterDocsByDocumentType(Doc.DOCUMENT_TYPE_ARTICLE, response.getDocs());
+
+        StringBuilder builder = new StringBuilder();
+        for (Doc article : articles) {
+            Log.i(TAG, article.getHeadline().getMain());
+            builder.append(article.getHeadline().getMain() + "\n\n");
+        }
+
+        return articles;
+    }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -210,10 +214,12 @@ public class ArticlesActivity extends AppCompatActivity {
         searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
             @Override
             public boolean onQueryTextSubmit(String query) {
-                scrollListener.resetState();
-                fetchArticles(query);
 
                 Log.d(TAG, "=========== Inside onQueryTextSubmit");
+
+                scrollListener.resetState();
+                searchFilters.setQuery(query);
+                searchArticles(searchFilters);
                 searchView.clearFocus();
 
                 return true;
@@ -237,7 +243,9 @@ public class ArticlesActivity extends AppCompatActivity {
                 Log.d(TAG, "------- BACK Pressed onMenuItemActionCollapse-----");
                 //DO SOMETHING WHEN THE SEARCHVIEW IS CLOSING
                 scrollListener.resetState();
-                fetchArticles(null);
+
+                searchFilters.resetQuery();
+                searchArticles(searchFilters);
 
                 return true;
             }
@@ -261,8 +269,27 @@ public class ArticlesActivity extends AppCompatActivity {
                 searchView.requestFocus();
                 return true;
 
+            case R.id.action_filter:
+                Log.d(TAG, "Action filter clicked - Launch a dialog fragment");
+                showFilterFragment();
+                return true;
         }
 
         return super.onOptionsItemSelected(item);
+    }
+
+    private void showFilterFragment() {
+        FragmentManager fm = getSupportFragmentManager();
+        SearchFilterFragment filterDialogFragment = SearchFilterFragment.newInstance(searchFilters);
+        filterDialogFragment.show(fm, "fragment_filter");
+    }
+
+    @Override
+    public void onFinishDialog(SearchFilters filters) {
+        // update search filters;
+        searchFilters = filters;
+
+        // search articles using updated filters;
+        searchArticles(searchFilters);
     }
 }

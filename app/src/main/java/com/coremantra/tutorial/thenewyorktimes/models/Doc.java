@@ -6,10 +6,13 @@ import com.google.gson.annotations.SerializedName;
 
 import org.parceler.Parcel;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Parcel
 public class Doc {
+
+    public static final String DOCUMENT_TYPE_ARTICLE = "article";
 
     @SerializedName("web_url")
     @Expose
@@ -123,6 +126,17 @@ public class Doc {
         this.id = id;
     }
 
+    public static List<Doc> filterDocsByDocumentType(String documentType, List<Doc> allDocs) {
+        List<Doc> filteredDocs = new ArrayList<>();
+
+        for (Doc doc : allDocs) {
+            if (doc.documentType.equals(documentType)) {
+                filteredDocs.add(doc);
+            }
+        }
+
+        return filteredDocs;
+    }
 
 
 }
