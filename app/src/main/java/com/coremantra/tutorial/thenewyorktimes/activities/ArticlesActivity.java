@@ -42,9 +42,7 @@ import retrofit2.converter.gson.GsonConverterFactory;
 
 public class ArticlesActivity extends AppCompatActivity implements SearchFilterFragment.OnFragmentInteractionListener {
 
-    private static final String TAG = ArticlesActivity.class.getName();
-//    @BindView(R.id.tvDetails)
-//    TextView tvDetails;
+    private static final String TAG = "NY: " + ArticlesActivity.class.getName();
 
     @BindView(R.id.rvArticles)
     RecyclerView rvArticles;
@@ -127,18 +125,21 @@ public class ArticlesActivity extends AppCompatActivity implements SearchFilterF
     // Send an API request to retrieve appropriate paginated data
     public void loadNextDataFromApi(int page, SearchFilters filters) {
 
-        Log.d(TAG, filters.toString());
+        Log.d(TAG, "loadNextDataFromApi Filter: "+ filters.toString());
 
         Call<ResponseWrapper> responseWrapperCall = nyTimesAPI.getArticles(nyTimesAPI.API_KEY, page, filters.getSortOrder(),
-                filters.getQuery(), filters.getNewsDesk()); // getArticles(nyTimesAPI.API_KEY, 0,"news_desk:(\"Education\"%20\"Health\")");
-        Log.d(TAG, responseWrapperCall.request().url().toString());
+                filters.getQuery(), filters.getNewsDesk());
+        Log.d(TAG, "loadNextDataFromApi Request: "+ responseWrapperCall.request().url().toString());
         responseWrapperCall.enqueue(nextDataResponseCallback);
     }
 
     private void searchArticles(SearchFilters filters) {
+
+        Log.d(TAG, "searchArticles Filter: "+ filters.toString());
+
         Call<ResponseWrapper> responseWrapperCall = nyTimesAPI.getArticles(nyTimesAPI.API_KEY, 0, filters.getSortOrder(),
-                filters.getQuery(), filters.getNewsDesk()); // getArticles(nyTimesAPI.API_KEY, 0,"news_desk:(\"Education\"%20\"Health\")");
-        Log.d(TAG, responseWrapperCall.request().url().toString());
+                filters.getQuery(), filters.getNewsDesk());
+        Log.d(TAG, "searchArticles Request: "+ responseWrapperCall.request().url().toString());
 
         responseWrapperCall.enqueue(newQueryResponseCallback);
     }

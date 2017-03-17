@@ -9,6 +9,8 @@ import org.parceler.Parcel;
 @Parcel
 public class Multimedium {
 
+    public static final String SUBTYPE_THUMBNAIL = "thumbnail";
+
     @SerializedName("width")
     @Expose
     private Integer width;

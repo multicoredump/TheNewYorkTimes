@@ -47,10 +47,9 @@ public class SearchFilters {
 
     public void reset() {
         query = null;
-
         beginDateString = null;
         sortOldest = false;
-        food = fashion = dining = travel = tech = false;
+        food = fashion = dining = travel = tech = true;
     }
 
     public void resetQuery() {
@@ -79,9 +78,7 @@ public class SearchFilters {
     }
 
     public String getSortOrder() {
-            return null;
-
-//         return sortOldest ? SORT_OLDEST : SORT_NEWEST;
+         return sortOldest ? SORT_OLDEST : SORT_NEWEST;
     }
 
     public boolean isSortOldest() {
@@ -151,9 +148,10 @@ public class SearchFilters {
     @Override
     public String toString() {
         StringBuilder builder = new StringBuilder().append("SearchFilter: ")
-                .append("Q: ").append(query).append("\n")
-                .append(getNewsDesk()).append("\n")
-                .append(beginDateString);
+                .append("Q: ").append(query)
+                .append(" sort = ").append(getSortOrder()).append(" ")
+                .append(getNewsDesk())
+                .append(" begin date: ").append(beginDateString);
 
         return builder.toString();
     }
