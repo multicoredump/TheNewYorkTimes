@@ -6,6 +6,7 @@ import android.provider.Settings;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.view.MenuItemCompat;
+import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.SearchView;
@@ -43,11 +44,14 @@ public class ArticlesActivity extends AppCompatActivity implements SearchFilterF
 
     private static final String TAG = "NY: " + ArticlesActivity.class.getName();
 
+    @BindView(R.id.swipe_refresh_container)
+    SwipeRefreshLayout swipeRefreshLayout;
 
     @BindView(R.id.rvArticles)
     RecyclerView rvArticles;
 
-    @BindView(R.id.toolbar) Toolbar toolbar;
+    @BindView(R.id.toolbar)
+    Toolbar toolbar;
 
     NYTimesClient nyTimesClient;
 
@@ -110,6 +114,17 @@ public class ArticlesActivity extends AppCompatActivity implements SearchFilterF
         rvArticles.addOnScrollListener(scrollListener);
 
         ItemClickSupport.addTo(rvArticles).setOnItemClickListener(articleClickListener);
+
+        swipeRefreshLayout.setColorSchemeResources(R.color.colorPrimary,
+                android.R.color.white,
+                R.color.colorPrimary,
+                android.R.color.white);
+        swipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
+            @Override
+            public void onRefresh() {
+                searchArticles(searchFilters);
+            }
+        });
     }
 
     @Override
@@ -227,6 +242,8 @@ public class ArticlesActivity extends AppCompatActivity implements SearchFilterF
 
     private void searchArticles(SearchFilters filters) {
 
+        swipeRefreshLayout.setRefreshing(true);
+
         compositeSubscription.add(NYTimesClient.getInstance()
                 .getRxArticles(0, filters.getSortOrder(),
                         filters.getQuery(), filters.getNewsDesk())
@@ -234,7 +251,9 @@ public class ArticlesActivity extends AppCompatActivity implements SearchFilterF
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(new Observer<ResponseWrapper>() {
                     @Override public void onCompleted() {
+
                         Log.d(TAG, "Rx: In onCompleted()");
+                        swipeRefreshLayout.setRefreshing(false);
                     }
 
                     @Override public void onError(Throwable e) {
