@@ -71,25 +71,11 @@
             style="@style/HighlightText"
             android:text="@string/sort_order" />
 
-        <RadioGroup
-            android:id="@+id/rgSortOrder"
+        <Spinner
+            android:id="@+id/spSort"
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal" >
-
-            <RadioButton
-                android:id="@+id/radioNewest"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/newest"
-                tools:checked="true"/>
-
-            <RadioButton
-                android:id="@+id/radioOldest"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/oldest" />
-        </RadioGroup>
+            android:entries="@array/sort_order"
+            android:layout_height="wrap_content" />
 
         <Button
             android:id="@+id/btSave"
