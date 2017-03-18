@@ -2,7 +2,6 @@ package com.coremantra.tutorial.thenewyorktimes.activities;
 
 import android.content.Intent;
 import android.os.Bundle;
-import android.os.PersistableBundle;
 import android.provider.Settings;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.FragmentManager;
@@ -21,7 +20,7 @@ import android.widget.EditText;
 
 import com.coremantra.tutorial.thenewyorktimes.R;
 import com.coremantra.tutorial.thenewyorktimes.adapters.ArticlesAdapter;
-import com.coremantra.tutorial.thenewyorktimes.api.NYTimesAPI;
+import com.coremantra.tutorial.thenewyorktimes.clients.NYTimesClient;
 import com.coremantra.tutorial.thenewyorktimes.fragments.SearchFilterFragment;
 import com.coremantra.tutorial.thenewyorktimes.models.Doc;
 import com.coremantra.tutorial.thenewyorktimes.models.ResponseWrapper;
@@ -29,19 +28,16 @@ import com.coremantra.tutorial.thenewyorktimes.models.SearchFilters;
 import com.coremantra.tutorial.thenewyorktimes.utils.EndlessRecyclerViewScrollListener;
 import com.coremantra.tutorial.thenewyorktimes.utils.ItemClickSupport;
 import com.coremantra.tutorial.thenewyorktimes.utils.NetworkUtils;
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 
 import java.util.ArrayList;
 import java.util.List;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
-import retrofit2.Call;
-import retrofit2.Callback;
-import retrofit2.Response;
-import retrofit2.Retrofit;
-import retrofit2.converter.gson.GsonConverterFactory;
+import rx.Observer;
+import rx.android.schedulers.AndroidSchedulers;
+import rx.schedulers.Schedulers;
+import rx.subscriptions.CompositeSubscription;
 
 public class ArticlesActivity extends AppCompatActivity implements SearchFilterFragment.OnFragmentInteractionListener {
 
@@ -53,9 +49,7 @@ public class ArticlesActivity extends AppCompatActivity implements SearchFilterF
 
     @BindView(R.id.toolbar) Toolbar toolbar;
 
-    Gson gson;
-    Retrofit retrofit;
-    NYTimesAPI nyTimesAPI;
+    NYTimesClient nyTimesClient;
 
     List<Doc> articles = new ArrayList<>();
     ArticlesAdapter articlesAdapter;
@@ -64,9 +58,11 @@ public class ArticlesActivity extends AppCompatActivity implements SearchFilterF
 
     SearchFilters searchFilters;
 
+    private CompositeSubscription compositeSubscription;
+
     Snackbar snackbar;
 
-    ItemClickSupport.OnItemClickListener itemClickListener = new ItemClickSupport.OnItemClickListener() {
+    ItemClickSupport.OnItemClickListener articleClickListener = new ItemClickSupport.OnItemClickListener() {
         @Override
         public void onItemClicked(RecyclerView recyclerView, int position, View v) {
 
@@ -88,20 +84,11 @@ public class ArticlesActivity extends AppCompatActivity implements SearchFilterF
         setContentView(R.layout.activity_articles);
         ButterKnife.bind(this);
 
-        Log.d(TAG, "---------- Inside ON CREATE +++++++++++++ -");
-
         setSupportActionBar(toolbar);
 
-        gson = new GsonBuilder()
-                .setDateFormat("yyyy-MM-dd'T'HH:mm:ssZ")
-                .create();
+        nyTimesClient = NYTimesClient.getInstance();
 
-        retrofit = new Retrofit.Builder()
-                .baseUrl(NYTimesAPI.BASE_URL)
-                .addConverterFactory(GsonConverterFactory.create(gson))
-                .build();
-
-        nyTimesAPI = retrofit.create(NYTimesAPI.class);
+        compositeSubscription = new CompositeSubscription();
 
         searchFilters = new SearchFilters();
 
@@ -116,20 +103,18 @@ public class ArticlesActivity extends AppCompatActivity implements SearchFilterF
         scrollListener = new EndlessRecyclerViewScrollListener(layoutManager) {
             @Override
             public void onLoadMore(int page, int totalItemsCount, RecyclerView view) {
-                loadNextDataFromApi(page, searchFilters);
+                loadNextPage(searchFilters, page);
             }
         };
         // Adds the scroll listener to RecyclerView
         rvArticles.addOnScrollListener(scrollListener);
 
-        ItemClickSupport.addTo(rvArticles).setOnItemClickListener(itemClickListener);
+        ItemClickSupport.addTo(rvArticles).setOnItemClickListener(articleClickListener);
     }
 
     @Override
     protected void onResume() {
         super.onResume();
-
-        Log.d(TAG, "---------- Inside ONRESUME -------------");
 
         if (NetworkUtils.isNetworkAvailable(this) || NetworkUtils.isOnline()) {
             if (snackbar != null && snackbar.isShown()) {
@@ -139,111 +124,6 @@ public class ArticlesActivity extends AppCompatActivity implements SearchFilterF
         } else {
             handleRequestError();
         }
-    }
-
-    @Override
-    protected void onPause() {
-        super.onPause();
-        Log.d(TAG, "---------- Inside ON PAUSE ********************");
-    }
-
-    @Override
-    public void onSaveInstanceState(Bundle outState, PersistableBundle outPersistentState) {
-        super.onSaveInstanceState(outState, outPersistentState);
-        Log.d(TAG, "---------- Inside ON onSaveInstanceState ********************");
-
-    }
-
-    // Append the next page of data into the adapter
-    // This method probably sends out a network request and appends new data items to your adapter.
-    // Send an API request to retrieve appropriate paginated data
-    public void loadNextDataFromApi(int page, SearchFilters filters) {
-
-        Log.d(TAG, "loadNextDataFromApi Filter: "+ filters.toString());
-
-        Call<ResponseWrapper> responseWrapperCall = nyTimesAPI.getArticles(nyTimesAPI.API_KEY, page, filters.getSortOrder(),
-                filters.getQuery(), filters.getNewsDesk());
-        Log.d(TAG, "loadNextDataFromApi Request: "+ responseWrapperCall.request().url().toString());
-        responseWrapperCall.enqueue(nextDataResponseCallback);
-    }
-
-    private void searchArticles(SearchFilters filters) {
-
-        Log.d(TAG, "searchArticles Filter: "+ filters.toString());
-
-        Call<ResponseWrapper> responseWrapperCall = nyTimesAPI.getArticles(nyTimesAPI.API_KEY, 0, filters.getSortOrder(),
-                filters.getQuery(), filters.getNewsDesk());
-        Log.d(TAG, "searchArticles Request: "+ responseWrapperCall.request().url().toString());
-
-        responseWrapperCall.enqueue(newQueryResponseCallback);
-    }
-
-    Callback<ResponseWrapper> newQueryResponseCallback = new Callback<ResponseWrapper>() {
-        @Override
-        public void onResponse(Call<ResponseWrapper> call, Response<ResponseWrapper> response) {
-            if (response.isSuccessful()) {
-                Log.d(TAG, "newQueryResponseCallback: Articles response is successful");
-
-                // Since this is a new search query, we replace the data in adapter.
-                articles.clear();
-                articles = getArticles(response.body().getResponse());
-                articlesAdapter.replaceData(articles);
-
-            } else {
-                Log.e(TAG, "newQueryResponseCallback: Something went wrong " + response.code());
-                Log.e(TAG, response.errorBody().toString());
-            }
-        }
-
-        @Override
-        public void onFailure(Call<ResponseWrapper> call, Throwable t) {
-            Log.e(TAG, "newQueryResponseCallback: Articles: Something went terrible", t);
-            handleRequestError();
-        }
-    };
-
-    Callback<ResponseWrapper> nextDataResponseCallback = new Callback<ResponseWrapper>() {
-        @Override
-        public void onResponse(Call<ResponseWrapper> call, Response<ResponseWrapper> response) {
-            if (response.isSuccessful()) {
-                Log.d(TAG, "nextDataResponseCallback: Articles response is successful");
-
-                // Since this is a incremental data, we append it
-                articles.addAll(getArticles(response.body().getResponse()));
-                articlesAdapter.appendData(articles);
-
-            } else {
-                Log.e(TAG, "nextDataResponseCallback: Something went wrong " + response.code());
-            }
-        }
-
-        @Override
-        public void onFailure(Call<ResponseWrapper> call, Throwable t) {
-            Log.e(TAG, "nextDataResponseCallback: Articles: Something went terrible", t);
-            handleRequestError();
-
-        }
-    };
-
-    private void handleRequestError() {
-
-        // The request was not successful hence first check if network is connected
-        if (!NetworkUtils.isNetworkAvailable(this) || !NetworkUtils.isOnline()) {
-            snackbar = Snackbar.make(rvArticles, "Network Error. Please connect to Internet and try again", Snackbar.LENGTH_INDEFINITE)
-                    .setAction("Wi-Fi Settings", new View.OnClickListener() {
-                        @Override
-                        public void onClick(View v) {
-                            startActivity(new Intent(Settings.ACTION_WIFI_SETTINGS));
-                        }
-                    });
-            snackbar.show();
-        }
-    }
-
-
-    public List<Doc> getArticles(com.coremantra.tutorial.thenewyorktimes.models.Response response) {
-
-        return Doc.filterDocsByDocumentType(Doc.DOCUMENT_TYPE_ARTICLE, response.getDocs());
     }
 
     @Override
@@ -260,7 +140,6 @@ public class ArticlesActivity extends AppCompatActivity implements SearchFilterF
         searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
             @Override
             public boolean onQueryTextSubmit(String query) {
-
                 scrollListener.resetState();
                 searchFilters.setQuery(query);
                 searchArticles(searchFilters);
@@ -284,10 +163,8 @@ public class ArticlesActivity extends AppCompatActivity implements SearchFilterF
 
             @Override
             public boolean onMenuItemActionCollapse(MenuItem item) {
-                Log.d(TAG, "------- BACK Pressed onMenuItemActionCollapse-----");
-                //DO SOMETHING WHEN THE SEARCHVIEW IS CLOSING
+                // SearchView is closing
                 scrollListener.resetState();
-
                 searchFilters.resetQuery();
                 searchArticles(searchFilters);
 
@@ -322,10 +199,11 @@ public class ArticlesActivity extends AppCompatActivity implements SearchFilterF
         return super.onOptionsItemSelected(item);
     }
 
-    private void showFilterFragment() {
-        FragmentManager fm = getSupportFragmentManager();
-        SearchFilterFragment filterDialogFragment = SearchFilterFragment.newInstance(searchFilters);
-        filterDialogFragment.show(fm, "fragment_filter");
+    @Override protected void onDestroy() {
+        if (compositeSubscription != null && !compositeSubscription.isUnsubscribed()) {
+            compositeSubscription.unsubscribe();
+        }
+        super.onDestroy();
     }
 
     @Override
@@ -335,5 +213,91 @@ public class ArticlesActivity extends AppCompatActivity implements SearchFilterF
 
         // search articles using updated filters;
         searchArticles(searchFilters);
+    }
+
+    private void showFilterFragment() {
+        FragmentManager fm = getSupportFragmentManager();
+        SearchFilterFragment filterDialogFragment = SearchFilterFragment.newInstance(searchFilters);
+        filterDialogFragment.show(fm, "fragment_filter");
+    }
+
+    private List<Doc> getArticles(com.coremantra.tutorial.thenewyorktimes.models.Response response) {
+        return Doc.filterDocsByDocumentType(Doc.DOCUMENT_TYPE_ARTICLE, response.getDocs());
+    }
+
+    private void searchArticles(SearchFilters filters) {
+
+        compositeSubscription.add(NYTimesClient.getInstance()
+                .getRxArticles(0, filters.getSortOrder(),
+                        filters.getQuery(), filters.getNewsDesk())
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(new Observer<ResponseWrapper>() {
+                    @Override public void onCompleted() {
+                        Log.d(TAG, "Rx: In onCompleted()");
+                    }
+
+                    @Override public void onError(Throwable e) {
+                        e.printStackTrace();
+                        Log.d(TAG, "Rx: In onError()");
+                        handleRequestError();
+                    }
+
+                    @Override public void onNext(ResponseWrapper responseWrapper) {
+                        Log.d(TAG, "Rx: In onNext(): Articles response is successful");
+                        // Since this is a new search query, we replace the data in adapter.
+                        articles.clear();
+                        //ToDo: Move this filter operation upStream to Obeservable using an operator
+                        articles = getArticles(responseWrapper.getResponse());
+                        articlesAdapter.replaceData(articles);
+                    }
+                })
+        );
+
+    }
+
+    private void loadNextPage(SearchFilters filters, int page) {
+
+        compositeSubscription.add(NYTimesClient.getInstance()
+                .getRxArticles(page, filters.getSortOrder(),
+                        filters.getQuery(), filters.getNewsDesk())
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(new Observer<ResponseWrapper>() {
+                    @Override public void onCompleted() {
+                        Log.d(TAG, "Rx: In onCompleted()");
+                    }
+
+                    @Override public void onError(Throwable e) {
+                        e.printStackTrace();
+                        Log.d(TAG, "Rx: In onError()");
+                        handleRequestError();
+                    }
+
+                    @Override public void onNext(ResponseWrapper responseWrapper) {
+                        Log.d(TAG, "Rx: In onNext(): Articles response is successful");
+                        // Since this is a incremental data, we append it
+                        //ToDo: Move this filter operation upStream to Obeservable using an operator
+                        articles.addAll(getArticles(responseWrapper.getResponse()));
+                        articlesAdapter.appendData(articles);
+                    }
+                })
+        );
+    }
+
+
+    private void handleRequestError() {
+
+        // The request was not successful hence first check if network is connected
+        if (!NetworkUtils.isNetworkAvailable(this) || !NetworkUtils.isOnline()) {
+            snackbar = Snackbar.make(rvArticles, "Network Error. Please connect to Internet and try again", Snackbar.LENGTH_INDEFINITE)
+                    .setAction("Wi-Fi Settings", new View.OnClickListener() {
+                        @Override
+                        public void onClick(View v) {
+                            startActivity(new Intent(Settings.ACTION_WIFI_SETTINGS));
+                        }
+                    });
+            snackbar.show();
+        }
     }
 }

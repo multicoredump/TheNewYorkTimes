@@ -40,7 +40,8 @@ The following **bonus** features are implemented:
 
 The following **additional** features are implemented:
 
-* [ ] Pull-to-refresh 
+* [ ] Pull-to-refresh
+* [x] Using RxJava along with Retrofit
 
 ## Video Walkthrough
 
@@ -56,6 +57,7 @@ Describe any challenges encountered while building the app.
 
 ## Open-source libraries used
 
+- RxJava and RxAndroid
 - [Glide](http://inthecheesefactory.com/blog/get-to-know-glide-recommended-by-google/en) for more efficient image rendering.
 - [Retrofit networking library](http://guides.codepath.com/android/Consuming-APIs-with-Retrofit)
 - [GSON library](http://guides.codepath.com/android/Using-Android-Async-Http-Client#decoding-with-gson-library) to streamline the parsing of JSON data.
