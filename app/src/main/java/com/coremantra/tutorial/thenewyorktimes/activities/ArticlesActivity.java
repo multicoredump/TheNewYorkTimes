@@ -2,6 +2,7 @@ package com.coremantra.tutorial.thenewyorktimes.activities;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.provider.Settings;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.view.MenuItemCompat;
@@ -26,6 +27,7 @@ import com.coremantra.tutorial.thenewyorktimes.models.ResponseWrapper;
 import com.coremantra.tutorial.thenewyorktimes.models.SearchFilters;
 import com.coremantra.tutorial.thenewyorktimes.utils.EndlessRecyclerViewScrollListener;
 import com.coremantra.tutorial.thenewyorktimes.utils.ItemClickSupport;
+import com.coremantra.tutorial.thenewyorktimes.utils.NetworkUtils;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
@@ -60,6 +62,8 @@ public class ArticlesActivity extends AppCompatActivity implements SearchFilterF
 
     SearchFilters searchFilters;
 
+    Snackbar snackbar;
+
     ItemClickSupport.OnItemClickListener itemClickListener = new ItemClickSupport.OnItemClickListener() {
         @Override
         public void onItemClicked(RecyclerView recyclerView, int position, View v) {
@@ -70,7 +74,7 @@ public class ArticlesActivity extends AppCompatActivity implements SearchFilterF
                 displayArticleIntent.putExtra("url", article.getWebUrl());
                 startActivity(displayArticleIntent);
             } else {
-                Snackbar.make(v, "position: " + position + " received NULL object", Snackbar.LENGTH_LONG)
+                Snackbar.make(v, "Internal error. Please try again", Snackbar.LENGTH_LONG)
                         .setAction("Action", null).show();
             }
         }
@@ -96,7 +100,6 @@ public class ArticlesActivity extends AppCompatActivity implements SearchFilterF
         nyTimesAPI = retrofit.create(NYTimesAPI.class);
 
         searchFilters = new SearchFilters();
-        searchArticles(searchFilters);
 
         // UI Code
         articlesAdapter = new ArticlesAdapter(articles);
@@ -119,6 +122,18 @@ public class ArticlesActivity extends AppCompatActivity implements SearchFilterF
         ItemClickSupport.addTo(rvArticles).setOnItemClickListener(itemClickListener);
     }
 
+    @Override
+    protected void onResume() {
+        super.onResume();
+        if (NetworkUtils.isNetworkAvailable(this) || NetworkUtils.isOnline()) {
+            if (snackbar != null && snackbar.isShown()) {
+                snackbar.dismiss();
+            }
+            searchArticles(searchFilters);
+        } else {
+            handleRequestError();
+        }
+    }
 
     // Append the next page of data into the adapter
     // This method probably sends out a network request and appends new data items to your adapter.
@@ -164,8 +179,11 @@ public class ArticlesActivity extends AppCompatActivity implements SearchFilterF
         @Override
         public void onFailure(Call<ResponseWrapper> call, Throwable t) {
             Log.e(TAG, "newQueryResponseCallback: Articles: Something went terrible", t);
+            handleRequestError();
         }
     };
+
+
 
     Callback<ResponseWrapper> nextDataResponseCallback = new Callback<ResponseWrapper>() {
         @Override
@@ -185,8 +203,25 @@ public class ArticlesActivity extends AppCompatActivity implements SearchFilterF
         @Override
         public void onFailure(Call<ResponseWrapper> call, Throwable t) {
             Log.e(TAG, "nextDataResponseCallback: Articles: Something went terrible", t);
+            handleRequestError();
+
         }
     };
+
+    private void handleRequestError() {
+
+        // The request was not successful hence first check if network is connected
+        if (!NetworkUtils.isNetworkAvailable(this) || !NetworkUtils.isOnline()) {
+            snackbar = Snackbar.make(rvArticles, "Network Error. Please connect to Internet and try again", Snackbar.LENGTH_INDEFINITE)
+                    .setAction("Wi-Fi Settings", new View.OnClickListener() {
+                        @Override
+                        public void onClick(View v) {
+                            startActivity(new Intent(Settings.ACTION_WIFI_SETTINGS));
+                        }
+                    });
+            snackbar.show();
+        }
+    }
 
 
     public List<Doc> getArticles(com.coremantra.tutorial.thenewyorktimes.models.Response response) {
