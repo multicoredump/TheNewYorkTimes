@@ -1,7 +1,6 @@
 package com.coremantra.tutorial.thenewyorktimes.adapters;
 
 import android.support.v7.widget.RecyclerView;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -78,7 +77,6 @@ public class ArticlesAdapter extends RecyclerView.Adapter<ArticlesAdapter.Articl
         holder.tvSnippet.setText(article.getSnippet());
 
         String imageURL = article.getThumbnailUrl();
-        Log.d(TAG, "ImageURL: " + imageURL);
 
         if (imageURL != null) {
             // load thumbnail

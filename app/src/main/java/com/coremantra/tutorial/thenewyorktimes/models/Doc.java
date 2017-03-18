@@ -1,8 +1,6 @@
 
 package com.coremantra.tutorial.thenewyorktimes.models;
 
-import android.util.Log;
-
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
 
@@ -15,8 +13,6 @@ import java.util.List;
 public class Doc {
 
     public static final String DOCUMENT_TYPE_ARTICLE = "article";
-
-    private static final String TAG = "NY: Doc";
 
     @SerializedName("web_url")
     @Expose
@@ -133,10 +129,7 @@ public class Doc {
 
     public String getThumbnailUrl() {
 
-        Log.d(TAG, "inside getThumbnailUrl " + multimedia.size());
-
         for (Multimedium medium : multimedia) {
-            Log.d(TAG, medium.getSubtype());
             if (medium.getSubtype().equals(Multimedium.SUBTYPE_THUMBNAIL))
                 return "https://www.nytimes.com/" + medium.getUrl();
         }

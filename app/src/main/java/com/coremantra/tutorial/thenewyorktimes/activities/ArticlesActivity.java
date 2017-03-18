@@ -2,6 +2,7 @@ package com.coremantra.tutorial.thenewyorktimes.activities;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.os.PersistableBundle;
 import android.provider.Settings;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.FragmentManager;
@@ -46,6 +47,7 @@ public class ArticlesActivity extends AppCompatActivity implements SearchFilterF
 
     private static final String TAG = "NY: " + ArticlesActivity.class.getName();
 
+
     @BindView(R.id.rvArticles)
     RecyclerView rvArticles;
 
@@ -86,6 +88,8 @@ public class ArticlesActivity extends AppCompatActivity implements SearchFilterF
         setContentView(R.layout.activity_articles);
         ButterKnife.bind(this);
 
+        Log.d(TAG, "---------- Inside ON CREATE +++++++++++++ -");
+
         setSupportActionBar(toolbar);
 
         gson = new GsonBuilder()
@@ -112,7 +116,6 @@ public class ArticlesActivity extends AppCompatActivity implements SearchFilterF
         scrollListener = new EndlessRecyclerViewScrollListener(layoutManager) {
             @Override
             public void onLoadMore(int page, int totalItemsCount, RecyclerView view) {
-                Log.d(TAG, " ---------------- Inside onLoadMore: " + page);
                 loadNextDataFromApi(page, searchFilters);
             }
         };
@@ -125,6 +128,9 @@ public class ArticlesActivity extends AppCompatActivity implements SearchFilterF
     @Override
     protected void onResume() {
         super.onResume();
+
+        Log.d(TAG, "---------- Inside ONRESUME -------------");
+
         if (NetworkUtils.isNetworkAvailable(this) || NetworkUtils.isOnline()) {
             if (snackbar != null && snackbar.isShown()) {
                 snackbar.dismiss();
@@ -133,6 +139,19 @@ public class ArticlesActivity extends AppCompatActivity implements SearchFilterF
         } else {
             handleRequestError();
         }
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        Log.d(TAG, "---------- Inside ON PAUSE ********************");
+    }
+
+    @Override
+    public void onSaveInstanceState(Bundle outState, PersistableBundle outPersistentState) {
+        super.onSaveInstanceState(outState, outPersistentState);
+        Log.d(TAG, "---------- Inside ON onSaveInstanceState ********************");
+
     }
 
     // Append the next page of data into the adapter
@@ -183,8 +202,6 @@ public class ArticlesActivity extends AppCompatActivity implements SearchFilterF
         }
     };
 
-
-
     Callback<ResponseWrapper> nextDataResponseCallback = new Callback<ResponseWrapper>() {
         @Override
         public void onResponse(Call<ResponseWrapper> call, Response<ResponseWrapper> response) {
@@ -225,15 +242,8 @@ public class ArticlesActivity extends AppCompatActivity implements SearchFilterF
 
 
     public List<Doc> getArticles(com.coremantra.tutorial.thenewyorktimes.models.Response response) {
-        List<Doc> articles = Doc.filterDocsByDocumentType(Doc.DOCUMENT_TYPE_ARTICLE, response.getDocs());
 
-        StringBuilder builder = new StringBuilder();
-        for (Doc article : articles) {
-            Log.i(TAG, article.getHeadline().getMain());
-            builder.append(article.getHeadline().getMain() + "\n\n");
-        }
-
-        return articles;
+        return Doc.filterDocsByDocumentType(Doc.DOCUMENT_TYPE_ARTICLE, response.getDocs());
     }
 
     @Override
@@ -250,8 +260,6 @@ public class ArticlesActivity extends AppCompatActivity implements SearchFilterF
         searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
             @Override
             public boolean onQueryTextSubmit(String query) {
-
-                Log.d(TAG, "=========== Inside onQueryTextSubmit");
 
                 scrollListener.resetState();
                 searchFilters.setQuery(query);
