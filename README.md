@@ -28,7 +28,7 @@ The following **optional** features are implemented:
 The following **bonus** features are implemented:
 
 * [x] Use the [RecyclerView](http://guides.codepath.com/android/Using-the-RecyclerView) with the `StaggeredGridLayoutManager` to display improve the grid of image results
-* [x] Show differnt views for different news articles that only have text or only have images.
+* [x] Show different views for different news articles that only have text or only have images.
 * [x] Use Parcelable instead of Serializable using the popular [Parceler library](http://guides.codepath.com/android/Using-Parceler).
 * [x] Leverages the [data binding support module](http://guides.codepath.com/android/Applying-Data-Binding-for-Views) to bind data into layout templates.
 * [x] Replace all icon drawables and other static image assets with [vector drawables](http://guides.codepath.com/android/Drawables#vector-drawables) where appropriate.
@@ -46,7 +46,6 @@ The following **additional** features are implemented:
 * [*] Used RxJava map function to transform ResponseWrapper to List of articles, which can be consumed by Subscriber directly
 * [*] Custom app icon
 * [*] Played with writing custom styles
-
 
 ## Video Walkthrough
 
