@@ -149,5 +149,4 @@ public class Doc {
         return filteredDocs;
     }
 
-
 }

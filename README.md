@@ -1,6 +1,6 @@
 # Project 2 -  The New York Times
 
-**NYTimes Food and Travel** is an android app that allows a user to search for articles on web using simple filters. The app utilizes [New York Times Search API](http://developer.nytimes.com/docs/read/article_search_api_v2).
+**The New York Times** is an android app that allows a user to search for articles on web using simple filters. The app utilizes [New York Times Search API](http://developer.nytimes.com/docs/read/article_search_api_v2).
 
 Time spent: **14** hours spent in total
 
@@ -42,7 +42,11 @@ The following **additional** features are implemented:
 
 * [x] Pull-to-refresh
 * [x] Added Ignore Begin Date field to search all articles with selected filter:Wq
-* [x] Using RxJava along with Retrofit
+* [x] Using RxJava along with Retrofit call
+* [*] Used RxJava map function to transform ResponseWrapper to List of articles, which can be consumed by Subscriber directly
+* [*] Custom app icon
+* [*] Played with writing custom styles
+
 
 ## Video Walkthrough
 

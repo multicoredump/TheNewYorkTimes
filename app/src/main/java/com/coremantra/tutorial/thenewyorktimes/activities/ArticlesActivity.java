@@ -24,7 +24,6 @@ import com.coremantra.tutorial.thenewyorktimes.adapters.ArticlesAdapter;
 import com.coremantra.tutorial.thenewyorktimes.clients.NYTimesClient;
 import com.coremantra.tutorial.thenewyorktimes.fragments.SearchFilterFragment;
 import com.coremantra.tutorial.thenewyorktimes.models.Doc;
-import com.coremantra.tutorial.thenewyorktimes.models.ResponseWrapper;
 import com.coremantra.tutorial.thenewyorktimes.models.SearchFilters;
 import com.coremantra.tutorial.thenewyorktimes.utils.EndlessRecyclerViewScrollListener;
 import com.coremantra.tutorial.thenewyorktimes.utils.ItemClickSupport;
@@ -35,7 +34,6 @@ import java.util.List;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
-import retrofit2.Call;
 import rx.Observer;
 import rx.android.schedulers.AndroidSchedulers;
 import rx.schedulers.Schedulers;
@@ -207,7 +205,6 @@ public class ArticlesActivity extends AppCompatActivity implements SearchFilterF
                 return true;
 
             case R.id.action_filter:
-                Log.d(TAG, "Action filter clicked - Launch a dialog fragment");
                 showFilterFragment();
                 return true;
         }
@@ -245,38 +242,38 @@ public class ArticlesActivity extends AppCompatActivity implements SearchFilterF
 
         swipeRefreshLayout.setRefreshing(true);
 
-        String beginDate = filters.isIgnoreBeginDate() ? null : filters.getBeginDateString();
-        Log.d(TAG, "searchArticles: " + beginDate + " filters.isIgnoreBeginDate() " + filters.isIgnoreBeginDate());
-
-        Call<ResponseWrapper> responseWrapperCall = nyTimesClient.getArticles(0, filters.getSortOrder(),
-                               filters.getQuery(), beginDate, filters.getNewsDesk());
-               Log.d(TAG, "searchArticles Request: "+ responseWrapperCall.request().url().toString());
+        // For debug
+//        Call<ResponseWrapper> responseWrapperCall = nyTimesClient.getArticles(0, filters.getSortOrder(),
+//                               filters.getQuery(), filters.isIgnoreBeginDate() ? null : filters.getBeginDateString(), filters.getNewsDesk());
+//        Log.d(TAG, "searchArticles Request: "+ responseWrapperCall.request().url().toString());
 
         compositeSubscription.add(NYTimesClient.getInstance()
                 .getRxArticles(0, filters.getSortOrder(),
-                        filters.getQuery(), beginDate, filters.getNewsDesk())
+                        filters.getQuery(), filters.isIgnoreBeginDate() ? null : filters.getBeginDateString(), filters.getNewsDesk())
+                .map(responseWrapper -> { return getArticles(responseWrapper.getResponse());})
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(new Observer<ResponseWrapper>() {
-                    @Override public void onCompleted() {
-
+                .subscribe(new Observer<List<Doc>>() {
+                    @Override
+                    public void onCompleted() {
                         Log.d(TAG, "Rx: In onCompleted()");
                         swipeRefreshLayout.setRefreshing(false);
                     }
 
-                    @Override public void onError(Throwable e) {
+                    @Override
+                    public void onError(Throwable e) {
                         e.printStackTrace();
                         Log.d(TAG, "Rx: In onError()");
                         swipeRefreshLayout.setRefreshing(false);
                         handleRequestError();
                     }
 
-                    @Override public void onNext(ResponseWrapper responseWrapper) {
-                        Log.d(TAG, "Rx: In onNext(): Articles response is successful");
+                    @Override
+                    public void onNext(List<Doc> docs) {
+                        Log.d(TAG, "Rx: In onNext(): Articles response is successful " + docs.size());
                         // Since this is a new search query, we replace the data in adapter.
                         articles.clear();
-                        //ToDo: Move this filter operation upStream to Obeservable using an operator
-                        articles = getArticles(responseWrapper.getResponse());
+                        articles = docs;
                         articlesAdapter.replaceData(articles);
                     }
                 })
@@ -286,30 +283,32 @@ public class ArticlesActivity extends AppCompatActivity implements SearchFilterF
 
     private void loadNextPage(SearchFilters filters, int page) {
 
-        String beginDate = filters.isIgnoreBeginDate()? null : filters.getBeginDateString();
-        Log.d(TAG, "loadNextPage: " + beginDate);
-
         compositeSubscription.add(NYTimesClient.getInstance()
                 .getRxArticles(page, filters.getSortOrder(),
-                        filters.getQuery(), beginDate, filters.getNewsDesk())
+                        filters.getQuery(), filters.isIgnoreBeginDate()? null : filters.getBeginDateString(), filters.getNewsDesk())
+                .map(responseWrapper -> { return getArticles(responseWrapper.getResponse());})
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(new Observer<ResponseWrapper>() {
-                    @Override public void onCompleted() {
+                .subscribe(new Observer<List<Doc>>() {
+                    @Override
+                    public void onCompleted() {
                         Log.d(TAG, "Rx: In onCompleted()");
+                        swipeRefreshLayout.setRefreshing(false);
                     }
 
-                    @Override public void onError(Throwable e) {
+                    @Override
+                    public void onError(Throwable e) {
                         e.printStackTrace();
                         Log.d(TAG, "Rx: In onError()");
+                        swipeRefreshLayout.setRefreshing(false);
                         handleRequestError();
                     }
 
-                    @Override public void onNext(ResponseWrapper responseWrapper) {
-                        Log.d(TAG, "Rx: In onNext(): Articles response is successful");
-                        // Since this is a incremental data, we append it
-                        //ToDo: Move this filter operation upStream to Obeservable using an operator
-                        articles.addAll(getArticles(responseWrapper.getResponse()));
+                    @Override
+                    public void onNext(List<Doc> docs) {
+                        Log.d(TAG, "Rx: In onNext(): Articles response is successful " + docs.size());
+                        // Since this is a new search query, we replace the data in adapter.
+                        articles.addAll(docs);
                         articlesAdapter.appendData(articles);
                     }
                 })

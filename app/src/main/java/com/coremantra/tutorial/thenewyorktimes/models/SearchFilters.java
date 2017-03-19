@@ -61,8 +61,6 @@ public class SearchFilters {
         beginDateString = queryDateFormat.format(calendar.getTime());
 
         ignoreBeginDate = true;
-
-        Log.d(TAG, " --------- date: " + beginDateString);
     }
 
     public void resetQuery() {
