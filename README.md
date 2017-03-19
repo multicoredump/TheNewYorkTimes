@@ -28,7 +28,7 @@ The following **optional** features are implemented:
 The following **bonus** features are implemented:
 
 * [x] Use the [RecyclerView](http://guides.codepath.com/android/Using-the-RecyclerView) with the `StaggeredGridLayoutManager` to display improve the grid of image results
-* [x:] For different news articles that only have text or only have images.
+* [x] Show differnt views for different news articles that only have text or only have images.
 * [x] Use Parcelable instead of Serializable using the popular [Parceler library](http://guides.codepath.com/android/Using-Parceler).
 * [x] Leverages the [data binding support module](http://guides.codepath.com/android/Applying-Data-Binding-for-Views) to bind data into layout templates.
 * [x] Replace all icon drawables and other static image assets with [vector drawables](http://guides.codepath.com/android/Drawables#vector-drawables) where appropriate.
@@ -52,8 +52,8 @@ The following **additional** features are implemented:
 
 Here's a walkthrough of implemented user stories:
 
-<img src='http://i.imgur.com/lMhGKEg.gif' title='NYtimes Network Error Handling' width='582' alt='Video Walkthrough' />
-<img src='http://i.imgur.com/m4JaiqI.gif' title='NYtimes Network Error Handling' width='582' alt='Video Walkthrough' />
+<img src='http://i.imgur.com/lMhGKEg.gif' title='NYtimes Network Error + WebView' width='582' alt='Video Walkthrough' />
+<img src='http://i.imgur.com/m4JaiqI.gif' title='NYtimes Search' width='582' alt='Video Walkthrough' />
 
 GIF created with [LiceCap](http://www.cockos.com/licecap/).
 
