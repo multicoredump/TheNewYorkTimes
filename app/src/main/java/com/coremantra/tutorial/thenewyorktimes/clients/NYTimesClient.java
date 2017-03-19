@@ -48,12 +48,12 @@ public class NYTimesClient {
         return instance;
     }
 
-    public Observable<ResponseWrapper> getRxArticles(Integer page, String order, String query, String newsDesk) {
-        return nyTimesService.getRxArticles(API_KEY, page, order, query, newsDesk);
+    public Observable<ResponseWrapper> getRxArticles(Integer page, String order, String query, String beginDate, String newsDesk) {
+        return nyTimesService.getRxArticles(API_KEY, page, order, query, beginDate, newsDesk);
     }
 
-    public Call<ResponseWrapper> getArticles(Integer page, String order, String query, String newsDesk) {
-        return nyTimesService.getArticles(API_KEY, page, order, query, newsDesk);
+    public Call<ResponseWrapper> getArticles(Integer page, String order, String query, String beginDate, String newsDesk) {
+        return nyTimesService.getArticles(API_KEY, page, order, query, beginDate, newsDesk);
     }
 
 }

@@ -18,6 +18,7 @@ public interface NYTimesService {
                                       @Query("page") Integer page,
                                       @Query("sort") String order,
                                       @Query("q") String search,
+                                      @Query("begin_date") String beginDate,
                                       @Query("fq") String newsDesk
                                       );
 
@@ -27,6 +28,7 @@ public interface NYTimesService {
                                                    @Query("page") Integer page,
                                                    @Query("sort") String order,
                                                    @Query("q") String search,
+                                                   @Query("begin_date") String beginDate,
                                                    @Query("fq") String newsDesk
     );
 }

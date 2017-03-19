@@ -4,8 +4,12 @@ import android.util.Log;
 
 import org.parceler.Parcel;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 
 /**
  * Created by radhikak on 3/17/17.
@@ -24,20 +28,23 @@ public class SearchFilters {
     public static final String NEWS_DESK_TRAVEL = "\"Travel\"";
     public static final String NEWS_DESK_TECH = "\"Technology\"";
 
-    private static final String TAG = "SearchFilters";
+    private static final String TAG = "NY: SearchFilters";
 
     private String query;
     private String beginDateString;
 
-
     private boolean sortOldest;
-
 
     private boolean food;
     private boolean fashion;
     private boolean dining;
     private boolean travel;
     private boolean tech;
+
+    private boolean ignoreBeginDate;
+
+    private static SimpleDateFormat queryDateFormat = new SimpleDateFormat("yyyyMMdd", Locale.US);
+
 
     public SearchFilters() { reset(); }
 
@@ -47,18 +54,38 @@ public class SearchFilters {
 
     public void reset() {
         query = null;
-        beginDateString = null;
         sortOldest = false;
         food = fashion = dining = travel = tech = true;
+
+        Calendar calendar = Calendar.getInstance();
+        calendar.add(Calendar.WEEK_OF_MONTH, -1);
+        beginDateString = queryDateFormat.format(calendar.getTime());
+
+        ignoreBeginDate = true;
+
+        Log.d(TAG, " --------- date: " + beginDateString);
     }
 
     public void resetQuery() {
         query = null;
     }
 
-    public void update(String beginDate, boolean oldest, boolean isfood, boolean isfashion, boolean isdining, boolean istravel, boolean istech) {
+    public void update(Date beginDate, boolean oldest, boolean isfood, boolean isfashion, boolean isdining, boolean istravel, boolean istech) {
 
-        beginDateString = beginDate;
+        beginDateString = queryDateFormat.format(beginDate);
+        ignoreBeginDate = false;
+        sortOldest = oldest;
+
+        food = isfood;
+        fashion = isfashion;
+        dining = isdining;
+        travel = istravel;
+        tech = istech;
+
+    }
+
+    public void update(boolean oldest, boolean isfood, boolean isfashion, boolean isdining, boolean istravel, boolean istech) {
+        ignoreBeginDate = true;
         sortOldest = oldest;
 
         food = isfood;
@@ -103,6 +130,14 @@ public class SearchFilters {
 
     public boolean isTech() {
         return tech;
+    }
+
+    public boolean isIgnoreBeginDate() {
+        return ignoreBeginDate;
+    }
+
+    public static SimpleDateFormat getQueryDateFormat() {
+        return queryDateFormat;
     }
 
     public String getNewsDesk() {

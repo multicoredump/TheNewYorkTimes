@@ -35,6 +35,7 @@ import java.util.List;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
+import retrofit2.Call;
 import rx.Observer;
 import rx.android.schedulers.AndroidSchedulers;
 import rx.schedulers.Schedulers;
@@ -244,9 +245,16 @@ public class ArticlesActivity extends AppCompatActivity implements SearchFilterF
 
         swipeRefreshLayout.setRefreshing(true);
 
+        String beginDate = filters.isIgnoreBeginDate() ? null : filters.getBeginDateString();
+        Log.d(TAG, "searchArticles: " + beginDate + " filters.isIgnoreBeginDate() " + filters.isIgnoreBeginDate());
+
+        Call<ResponseWrapper> responseWrapperCall = nyTimesClient.getArticles(0, filters.getSortOrder(),
+                               filters.getQuery(), beginDate, filters.getNewsDesk());
+               Log.d(TAG, "searchArticles Request: "+ responseWrapperCall.request().url().toString());
+
         compositeSubscription.add(NYTimesClient.getInstance()
                 .getRxArticles(0, filters.getSortOrder(),
-                        filters.getQuery(), filters.getNewsDesk())
+                        filters.getQuery(), beginDate, filters.getNewsDesk())
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(new Observer<ResponseWrapper>() {
@@ -259,6 +267,7 @@ public class ArticlesActivity extends AppCompatActivity implements SearchFilterF
                     @Override public void onError(Throwable e) {
                         e.printStackTrace();
                         Log.d(TAG, "Rx: In onError()");
+                        swipeRefreshLayout.setRefreshing(false);
                         handleRequestError();
                     }
 
@@ -277,9 +286,12 @@ public class ArticlesActivity extends AppCompatActivity implements SearchFilterF
 
     private void loadNextPage(SearchFilters filters, int page) {
 
+        String beginDate = filters.isIgnoreBeginDate()? null : filters.getBeginDateString();
+        Log.d(TAG, "loadNextPage: " + beginDate);
+
         compositeSubscription.add(NYTimesClient.getInstance()
                 .getRxArticles(page, filters.getSortOrder(),
-                        filters.getQuery(), filters.getNewsDesk())
+                        filters.getQuery(), beginDate, filters.getNewsDesk())
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(new Observer<ResponseWrapper>() {
@@ -303,7 +315,6 @@ public class ArticlesActivity extends AppCompatActivity implements SearchFilterF
                 })
         );
     }
-
 
     private void handleRequestError() {
 

@@ -27,10 +27,20 @@
             android:id="@+id/etBeginDate"
             android:layout_width="150dp"
             android:layout_height="wrap_content"
-            android:padding="10dp"
+            android:padding="8dp"
             android:hint="@string/begin_date_hint" />
 
+        <TextView
+            android:id="@+id/tvDisableBeginDate"
+            style="@style/HighlightText"
+            android:text="@string/news_desk" />
 
+        <CheckBox
+            android:id="@+id/cbNoBeginDate"
+            android:layout_width="150dp"
+            android:layout_height="wrap_content"
+            android:text="@string/ignore_begin_date" />
+        
         <TextView
             android:id="@+id/tvNewsDesk"
             style="@style/HighlightText"

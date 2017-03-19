@@ -17,5 +17,11 @@
     <string name="begin_date">Begin date:</string>
     <string name="oldest">Oldest</string>
     <string name="newest">Newest</string>
-    <string name="begin_date_hint">YYYY-MM-DD</string>
+    <string name="begin_date_hint">MM/DD/YY</string>
+    <string name="ignore_begin_date">Ignore begin date</string>
+
+    <string-array name="sort_order">
+        <item>Oldest</item>
+        <item>Newest</item>
+    </string-array>
 </resources>
