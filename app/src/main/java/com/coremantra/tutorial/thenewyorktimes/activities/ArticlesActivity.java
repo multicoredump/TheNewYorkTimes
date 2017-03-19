@@ -321,11 +321,8 @@ public class ArticlesActivity extends AppCompatActivity implements SearchFilterF
         // The request was not successful hence first check if network is connected
         if (!NetworkUtils.isNetworkAvailable(this) || !NetworkUtils.isOnline()) {
             snackbar = Snackbar.make(rvArticles, "Network Error. Please connect to Internet and try again", Snackbar.LENGTH_INDEFINITE)
-                    .setAction("Wi-Fi Settings", new View.OnClickListener() {
-                        @Override
-                        public void onClick(View v) {
+                    .setAction("Wi-Fi Settings", v -> {
                             startActivity(new Intent(Settings.ACTION_WIFI_SETTINGS));
-                        }
                     });
             snackbar.show();
         }

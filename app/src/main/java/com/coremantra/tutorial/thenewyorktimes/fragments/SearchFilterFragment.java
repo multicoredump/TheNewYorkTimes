@@ -14,7 +14,6 @@ import android.view.Window;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
 import android.widget.CheckBox;
-import android.widget.DatePicker;
 import android.widget.EditText;
 import android.widget.Spinner;
 
@@ -76,18 +75,14 @@ public class SearchFilterFragment extends DialogFragment {
 
     FragmentSearchFilterBinding binding;
 
-    View.OnClickListener saveClickListener = new View.OnClickListener() {
-        @Override
-        public void onClick(View v) {
+    View.OnClickListener saveClickListener = v ->  {
             // update search filters
             if (mListener != null) {
 
                 if (cbIgnoreBeginDate.isChecked()) {
-                    Log.d(TAG, " -------- saving ignore state");
                     filters.update(spSort.getSelectedItem().toString().toLowerCase().equals(SearchFilters.SORT_OLDEST.toLowerCase()),
                             cbFood.isChecked(), cbFashion.isChecked(), cbDining.isChecked(), cbTravel.isChecked(), cbTech.isChecked());
                 } else {
-                    Log.d(TAG, " -------- OVERWRITING ignore state");
                     Date date = new Date();
 
                     try {
@@ -103,7 +98,6 @@ public class SearchFilterFragment extends DialogFragment {
                 mListener.onFinishDialog(filters);
             }
             dismiss();
-        }
     };
 
     public SearchFilterFragment() {
@@ -160,22 +154,14 @@ public class SearchFilterFragment extends DialogFragment {
         }
         etBeginDate.setText(displayDateFormat.format(date));
 
-        final DatePickerDialog.OnDateSetListener onDateSetListener = new DatePickerDialog.OnDateSetListener() {
-
-            @Override
-            public void onDateSet(DatePicker view, int year, int monthOfYear,
-                                  int dayOfMonth) {
+        final DatePickerDialog.OnDateSetListener onDateSetListener = (view1, year, month, dayOfMonth) ->  {
                 beginDate.set(Calendar.YEAR, year);
-                beginDate.set(Calendar.MONTH, monthOfYear);
+                beginDate.set(Calendar.MONTH, month);
                 beginDate.set(Calendar.DAY_OF_MONTH, dayOfMonth);
                 etBeginDate.setText(displayDateFormat.format(beginDate.getTime()));
-            }
-
         };
 
-        etBeginDate.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
+        etBeginDate.setOnClickListener(v -> {
                 //Hide Keyboard
                 InputMethodManager imm = (InputMethodManager)getContext().getSystemService(Context.INPUT_METHOD_SERVICE);
                 imm.hideSoftInputFromWindow(v.getWindowToken(), 0);
@@ -183,7 +169,7 @@ public class SearchFilterFragment extends DialogFragment {
                 new DatePickerDialog(getContext(), onDateSetListener, beginDate
                         .get(Calendar.YEAR), beginDate.get(Calendar.MONTH),
                         beginDate.get(Calendar.DAY_OF_MONTH)).show();
-            }
+
         });
 
         boolean ignoreBeginDate = filters.isIgnoreBeginDate();
@@ -192,15 +178,10 @@ public class SearchFilterFragment extends DialogFragment {
         if (ignoreBeginDate)
             etBeginDate.setEnabled(false);
 
-        cbIgnoreBeginDate.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                etBeginDate.setEnabled(!cbIgnoreBeginDate.isChecked());
-
-            }
+        cbIgnoreBeginDate.setOnClickListener( v -> {
+            etBeginDate.setEnabled(!cbIgnoreBeginDate.isChecked());
         });
 
-        Log.d(TAG, "Sort order is " + filters.getSortOrder());
         for (int i = 0; i < sortOrder.length; i++) {
             if (sortOrder[i].toLowerCase().equals(filters.getSortOrder())) {
                 spSort.setSelection(i);

@@ -1,8 +1,15 @@
 apply plugin: 'com.android.application'
+apply plugin: 'me.tatarka.retrolambda' // make sure to apply last!
 
 android {
     compileSdkVersion 24
     buildToolsVersion "25.0.2"
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+
     defaultConfig {
         applicationId "com.coremantra.tutorial.thenewyorktimes"
         minSdkVersion 19
@@ -13,6 +20,7 @@ android {
         vectorDrawables.useSupportLibrary = true
         dataBinding.enabled = true
     }
+
     buildTypes {
         release {
             minifyEnabled false
