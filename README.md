@@ -43,9 +43,9 @@ The following **additional** features are implemented:
 * [x] Pull-to-refresh
 * [x] Added Ignore Begin Date field to search all articles with selected filter:Wq
 * [x] Using RxJava along with Retrofit call
-* [*] Used RxJava map function to transform ResponseWrapper to List of articles, which can be consumed by Subscriber directly
-* [*] Custom app icon
-* [*] Played with writing custom styles
+* [x] Used RxJava map function to transform ResponseWrapper to List of articles, which can be consumed by Subscriber directly
+* [x] Custom app icon
+* [x] Played with writing custom styles
 
 ## Video Walkthrough
 
