@@ -45,7 +45,6 @@ public class SearchFilters {
 
     private static SimpleDateFormat queryDateFormat = new SimpleDateFormat("yyyyMMdd", Locale.US);
 
-
     public SearchFilters() { reset(); }
 
     public void setQuery(String query) {

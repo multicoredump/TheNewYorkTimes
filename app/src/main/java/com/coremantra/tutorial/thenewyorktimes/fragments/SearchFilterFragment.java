@@ -2,6 +2,7 @@ package com.coremantra.tutorial.thenewyorktimes.fragments;
 
 import android.app.DatePickerDialog;
 import android.content.Context;
+import android.databinding.DataBindingUtil;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.DialogFragment;
@@ -18,6 +19,7 @@ import android.widget.EditText;
 import android.widget.Spinner;
 
 import com.coremantra.tutorial.thenewyorktimes.R;
+import com.coremantra.tutorial.thenewyorktimes.databinding.FragmentSearchFilterBinding;
 import com.coremantra.tutorial.thenewyorktimes.models.SearchFilters;
 
 import org.parceler.Parcels;
@@ -71,6 +73,8 @@ public class SearchFilterFragment extends DialogFragment {
     private String displayDatePattern = "MM/dd/yy";
     private SimpleDateFormat displayDateFormat = new SimpleDateFormat(displayDatePattern, Locale.US);
 
+
+    FragmentSearchFilterBinding binding;
 
     View.OnClickListener saveClickListener = new View.OnClickListener() {
         @Override
@@ -130,7 +134,9 @@ public class SearchFilterFragment extends DialogFragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
-        View view = inflater.inflate(R.layout.fragment_search_filter, container, false);
+        binding = DataBindingUtil.inflate(inflater, R.layout.fragment_search_filter, container, false);
+        binding.setFilters(filters);
+        View view = binding.getRoot();
         ButterKnife.bind(this, view);
         getDialog().getWindow().requestFeature(Window.FEATURE_NO_TITLE);
 
@@ -179,12 +185,6 @@ public class SearchFilterFragment extends DialogFragment {
                         beginDate.get(Calendar.DAY_OF_MONTH)).show();
             }
         });
-
-        cbFood.setChecked(filters.isFood());
-        cbFashion.setChecked(filters.isFashion());
-        cbDining.setChecked(filters.isDining());
-        cbTravel.setChecked(filters.isTravel());
-        cbTech.setChecked(filters.isTech());
 
         boolean ignoreBeginDate = filters.isIgnoreBeginDate();
         cbIgnoreBeginDate.setChecked(ignoreBeginDate);
